@@ -5,7 +5,7 @@ FILENAMES=(
 )
 
 
-teardown() {
+function teardown {
     rm -rf nonexistant_dest nonexistant_source rsync_dest rsync_source transferred
 }
 
@@ -191,4 +191,34 @@ teardown() {
         [ ! -f rsync_dest/"$i" ]
         [ ! -d rsync_dest/subdirectory ]
     done
+}
+
+
+@test "New files after transfer" {
+    mkdir rsync_source rsync_dest
+    mkdir rsync_source/subdirectory
+    for i in "${FILENAMES[@]}"; do
+        echo "filename: "$i""
+        touch rsync_source/"$i"
+        touch rsync_source/subdirectory/"$i"
+    done
+
+    run ./transfer_once.sh rsync_source rsync_dest  
+
+    touch rsync_source/"additional file"
+    touch rsync_source/subdirectory/"additional file"
+
+    run ./transfer_once.sh rsync_source rsync_dest  
+
+    echo -e "status:\n${status}\n"
+    echo -e "output:\n${output}\n"
+    [ "$status" -eq 0 ]
+    [ -d rsync_dest ]
+    for i in "${FILENAMES[@]}"; do
+        echo "filename: "$i""
+        [ -f rsync_dest/"$i" ]
+        [ -f rsync_dest/subdirectory/"$i" ]
+    done
+    [ -f rsync_dest/"additional file" ]
+    [ -f rsync_dest/subdirectory/"additional file" ]
 }
