@@ -108,7 +108,6 @@ teardown() {
     mkdir rsync_source rsync_dest
     for i in "${FILENAMES[@]}"; do
         echo "filename: "$i""
-        ls rsync_dest
         touch rsync_source/"$i"
     done
 
@@ -121,7 +120,6 @@ teardown() {
 
     for i in "${FILENAMES[@]}"; do
         echo "filename: "$i""
-        ls rsync_dest
         [ -f rsync_dest/"$i" ]
     done
 }
@@ -131,7 +129,6 @@ teardown() {
     mkdir rsync_source rsync_dest
     for i in "${FILENAMES[@]}"; do
         echo "filename: "$i""
-        ls rsync_dest
         touch rsync_source/"$i"
         echo "$i" >> transferred
     done
@@ -144,7 +141,6 @@ teardown() {
     [ -d rsync_dest ]
     for i in "${FILENAMES[@]}"; do
         echo "filename: "$i""
-        ls rsync_dest
         [ ! -f rsync_dest/"$i" ]
     done
 }
@@ -155,7 +151,6 @@ teardown() {
     mkdir rsync_source/subdirectory
     for i in "${FILENAMES[@]}"; do
         echo "filename: "$i""
-        ls rsync_dest
         touch rsync_source/"$i"
         touch rsync_source/subdirectory/"$i"
     done
@@ -168,7 +163,6 @@ teardown() {
     [ -d rsync_dest ]
     for i in "${FILENAMES[@]}"; do
         echo "filename: "$i""
-        ls rsync_dest
         [ -f rsync_dest/"$i" ]
         [ -f rsync_dest/subdirectory/"$i" ]
     done
@@ -180,7 +174,6 @@ teardown() {
     mkdir rsync_source/subdirectory
     for i in "${FILENAMES[@]}"; do
         echo "filename: "$i""
-        ls rsync_dest
         touch rsync_source/"$i"
         echo "$i" >> transferred
         touch rsync_source/subdirectory/"$i"
@@ -195,8 +188,6 @@ teardown() {
     [ -d rsync_dest ]
     for i in "${FILENAMES[@]}"; do
         echo "filename: "$i""
-        ls rsync_dest
-        ls rsync_dest/subdirectory
         [ ! -f rsync_dest/"$i" ]
         [ ! -d rsync_dest/subdirectory ]
     done

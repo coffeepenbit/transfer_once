@@ -26,6 +26,7 @@ flock --nonblock $lock_filepath                 \
     rsync                                       \
         "$source_dir/"                          \
         "$destination_dir/"                     \
+        --prune-empty-dirs                      \
         --itemize-changes                       \
         --archive                               \
         --compress                              \
@@ -34,7 +35,7 @@ flock --nonblock $lock_filepath                 \
         --exclude-from="$transferred_filepath"  \
         >> "$transferred_filepath"              
 
-grep -v "^\.\/$" $transferred_filepath       \
+grep -v "^\.\/$" $transferred_filepath          \
     > "$transferred_filepath"_intermediate      \
 && mv "$transferred_filepath"_intermediate      \
       "$transferred_filepath"
