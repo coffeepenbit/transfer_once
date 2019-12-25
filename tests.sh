@@ -1,3 +1,10 @@
+FILENAMES=(
+    "single_file"
+    "whitespace file"
+    ".hidden file"
+)
+
+
 teardown() {
     rm -rf nonexistant_dest nonexistant_source rsync_dest rsync_source transferred
 }
@@ -59,31 +66,138 @@ teardown() {
 
 
 @test "Single file transfer" {
-    mkdir rsync_source rsync_dest
-    touch rsync_source/single_file.txt
+    for i in "${FILENAMES[@]}"; do
+        echo "single file name: "$i""
+        teardown
+        mkdir rsync_source rsync_dest
+        touch rsync_source/"$i"
 
-    run ./transfer_once.sh rsync_source rsync_dest
+        run ./transfer_once.sh rsync_source rsync_dest
 
-    echo -e "status:\n${status}\n"
-    echo -e "output:\n${output}\n"
-    [ -d rsync_dest ]
-    [ -f rsync_dest/single_file.txt ]
-    [ "$status" -eq 0 ]
+        echo -e "status:\n${status}\n"
+        echo -e "output:\n${output}\n"
+        [ -d rsync_dest ]
+        [ -f rsync_dest/"$i" ]
+        [ "$status" -eq 0 ]
+    done
 }
 
 
 @test "Single file transfer once" {
-    mkdir rsync_source rsync_dest
-    touch rsync_source/single_file.txt
-    [ ! -f rsync_dest/single_file.txt ]
-    [ ! -f ./transferred ]
-    echo "single_file.txt" > transferred
+    for i in "${FILENAMES[@]}"; do
+        echo "single file name: "$i""
+        teardown
+        mkdir rsync_source rsync_dest
+        touch rsync_source/"$i"
+        [ ! -f rsync_dest/"$i" ]
+        [ ! -f ./transferred ]
+        echo "$i" > transferred
 
-    run ./transfer_once.sh rsync_source/ rsync_dest/
+        run ./transfer_once.sh rsync_source rsync_dest
+
+        echo -e "status:\n${status}\n"
+        echo -e "output:\n${output}\n"
+        [ "$status" -eq 0 ]
+        [ -d rsync_dest ]
+        [ ! -f rsync_dest/"$i" ]
+    done
+}
+
+
+@test "Multi-file transfer" {
+    mkdir rsync_source rsync_dest
+    for i in "${FILENAMES[@]}"; do
+        echo "filename: "$i""
+        ls rsync_dest
+        touch rsync_source/"$i"
+    done
+
+    run ./transfer_once.sh rsync_source rsync_dest  
 
     echo -e "status:\n${status}\n"
     echo -e "output:\n${output}\n"
-    [ -d rsync_dest ]
-    [ ! -f rsync_dest/single_file.txt ]
     [ "$status" -eq 0 ]
+    [ -d rsync_dest ]
+
+    for i in "${FILENAMES[@]}"; do
+        echo "filename: "$i""
+        ls rsync_dest
+        [ -f rsync_dest/"$i" ]
+    done
+}
+
+
+@test "Multi-file transfer once" {
+    mkdir rsync_source rsync_dest
+    for i in "${FILENAMES[@]}"; do
+        echo "filename: "$i""
+        ls rsync_dest
+        touch rsync_source/"$i"
+        echo "$i" >> transferred
+    done
+
+    run ./transfer_once.sh rsync_source rsync_dest  
+
+    echo -e "status:\n${status}\n"
+    echo -e "output:\n${output}\n"
+    [ "$status" -eq 0 ]
+    [ -d rsync_dest ]
+    for i in "${FILENAMES[@]}"; do
+        echo "filename: "$i""
+        ls rsync_dest
+        [ ! -f rsync_dest/"$i" ]
+    done
+}
+
+
+@test "Multi-file subdirectory" {
+    mkdir rsync_source rsync_dest
+    mkdir rsync_source/subdirectory
+    for i in "${FILENAMES[@]}"; do
+        echo "filename: "$i""
+        ls rsync_dest
+        touch rsync_source/"$i"
+        touch rsync_source/subdirectory/"$i"
+    done
+
+    run ./transfer_once.sh rsync_source rsync_dest  
+
+    echo -e "status:\n${status}\n"
+    echo -e "output:\n${output}\n"
+    [ "$status" -eq 0 ]
+    [ -d rsync_dest ]
+    for i in "${FILENAMES[@]}"; do
+        echo "filename: "$i""
+        ls rsync_dest
+        [ -f rsync_dest/"$i" ]
+        [ -f rsync_dest/subdirectory/"$i" ]
+    done
+}
+
+
+@test "Multi-file subdirectory transfer once" {
+    mkdir rsync_source rsync_dest
+    mkdir rsync_source/subdirectory
+    for i in "${FILENAMES[@]}"; do
+        echo "filename: "$i""
+        ls rsync_dest
+        touch rsync_source/"$i"
+        echo "$i" >> transferred
+        touch rsync_source/subdirectory/"$i"
+        echo "subdirectory/$i" >> transferred
+    done
+
+    run ./transfer_once.sh rsync_source rsync_dest  
+
+    echo -e "status:\n${status}\n"
+    echo -e "output:\n${output}\n"
+    [ "$status" -eq 0 ]
+    [ -d rsync_dest ]
+    for i in "${FILENAMES[@]}"; do
+        echo "filename: "$i""
+        ls rsync_dest
+        ls rsync_dest/subdirectory
+        [ ! -f rsync_dest/"$i" ]
+        [ ! -d rsync_dest/subdirectory ]
+    done
 }
