@@ -22,7 +22,6 @@ function transfer_once {
             --human-readable                        \
             --out-format="%n"                       \
             --exclude-from="$transferred_filepath"  \
-            >> "$transferred_filepath"
-                  
-    echo "transfer_once done"
+            >> "$transferred_filepath"              \
+    && echo "$0 done"
 }
