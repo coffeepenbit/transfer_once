@@ -22,22 +22,28 @@ echo "lock_filepath \"$lock_filepath\""
 transferred_filepath="./transferred"
 touch $transferred_filepath
 
-flock --nonblock $lock_filepath                 \
-    rsync                                       \
-        "$source_dir/"                          \
-        "$destination_dir/"                     \
-        --prune-empty-dirs                      \
-        --itemize-changes                       \
-        --archive                               \
-        --compress                              \
-        --human-readable                        \
-        --out-format="%n"                       \
-        --exclude-from="$transferred_filepath"  \
-        >> "$transferred_filepath"              
+flock --nonblock $lock_filepath                             \
+    rsync                                                   \
+        "$source_dir/"                                      \
+        "$destination_dir/"                                 \
+        --prune-empty-dirs                                  \
+        --itemize-changes                                   \
+        --archive                                           \
+        --compress                                          \
+        --human-readable                                    \
+        --out-format="%n"                                   \
+        --exclude-from="$transferred_filepath"              \
+        | tee -a "$transferred_filepath"
 
-grep -v "\/$" $transferred_filepath          \
-    > "$transferred_filepath"_intermediate      \
-&& mv "$transferred_filepath"_intermediate      \
+rsync_exit_status=${PIPESTATUS[0]}
+if [ "$rsync_exit_status" -ne "0" ]; then
+    echo "rsync exited with $rsync_exit_status"
+    exit $rsync_exit_status
+fi
+
+grep -v "\/$" $transferred_filepath                         \
+    > "$transferred_filepath"_intermediate                  \
+&& mv "$transferred_filepath"_intermediate                  \
       "$transferred_filepath"
 
 echo "$0 done"
