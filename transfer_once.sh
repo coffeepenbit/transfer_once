@@ -33,9 +33,9 @@ flock --nonblock $lock_filepath                 \
         --human-readable                        \
         --out-format="%n"                       \
         --exclude-from="$transferred_filepath"  \
-        | tee -a "$transferred_filepath"         
+        >> "$transferred_filepath"              
 
-grep -v "\/$" $transferred_filepath             \
+grep -v "\/$" $transferred_filepath          \
     > "$transferred_filepath"_intermediate      \
 && mv "$transferred_filepath"_intermediate      \
       "$transferred_filepath"
