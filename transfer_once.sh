@@ -1,6 +1,7 @@
 set -e
 
 NEXPECTED_ARGS=2
+TRANSFERRED_FILEPATH="./transferred"
 
 
 function clean_up_transferred_list {
@@ -14,7 +15,6 @@ function clean_up_transferred_list {
         echo "Transferred file path doesn't exist"
         exit 1
     fi 
-
 }
 
 
@@ -26,8 +26,7 @@ function remove_directories_from_list {
         > "$filepath"_intermediate                          \
     || [ $? -eq 1 ] # Prevent error if no match found
 
-    mv "$transferred_filepath"_intermediate                 \
-      "$transferred_filepath"
+    mv "${filepath}_intermediate" "$filepath"               
 }
 
 
@@ -38,8 +37,7 @@ function remove_duplicates_from_list {
     sort -u "$filepath"                                     \
         > "$filepath"_intermediate                          
 
-    mv "$transferred_filepath"_intermediate                 \
-      "$transferred_filepath"
+    mv "${filepath}_intermediate" "$filepath"               
 }
 
 
@@ -58,10 +56,7 @@ echo "source_dir: \"$source_dir\""
 echo "destination_dir: \"$destination_dir\""
 
 lock_filepath="$HOME/.transfer_once.lock"
-echo "lock_filepath \"$lock_filepath\""
-
-transferred_filepath="./transferred"
-touch $transferred_filepath
+touch $TRANSFERRED_FILEPATH
 
 flock --nonblock $lock_filepath                             \
     rsync                                                   \
@@ -73,8 +68,8 @@ flock --nonblock $lock_filepath                             \
         --compress                                          \
         --human-readable                                    \
         --out-format="%n"                                   \
-        --exclude-from="$transferred_filepath"              \
-        | tee -a "$transferred_filepath"
+        --exclude-from="$TRANSFERRED_FILEPATH"              \
+        | tee -a "$TRANSFERRED_FILEPATH"
 
 rsync_exit_status=${PIPESTATUS[0]}
 if [ "$rsync_exit_status" -ne "0" ]; then
@@ -82,6 +77,6 @@ if [ "$rsync_exit_status" -ne "0" ]; then
     exit $rsync_exit_status
 fi
 
-clean_up_transferred_list "$transferred_filepath"
+clean_up_transferred_list "$TRANSFERRED_FILEPATH"
 
 echo "$0 done"
