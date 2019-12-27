@@ -1,11 +1,52 @@
 set -e
 
-nexpected_args=2
+NEXPECTED_ARGS=2
 
-if [ ! $# -eq $nexpected_args ]
+
+function clean_up_transferred_list {
+    echo "Cleaning up transferred file list"
+    transferred_filepath="$1"
+
+    if [ -f "$transferred_filepath" ]; then
+        remove_directories_from_list "$1"
+        remove_duplicates_from_list "$1"
+    else
+        echo "Transferred file path doesn't exist"
+        exit 1
+    fi 
+
+}
+
+
+function remove_directories_from_list {
+    echo "Removing directories from list"
+    filepath="$1"
+
+    grep -v "\/$" "$filepath"                               \
+        > "$filepath"_intermediate                          \
+    || [ $? -eq 1 ] # Prevent error if no match found
+
+    mv "$transferred_filepath"_intermediate                 \
+      "$transferred_filepath"
+}
+
+
+function remove_duplicates_from_list {
+    echo "Removing duplicates from list"
+    filepath="$1"
+
+    sort -u "$filepath"                                     \
+        > "$filepath"_intermediate                          
+
+    mv "$transferred_filepath"_intermediate                 \
+      "$transferred_filepath"
+}
+
+
+if [ ! $# -eq $NEXPECTED_ARGS ]
     then
         echo "Number of arguments provided: $#"
-        echo "Number of arguments expected: $nexpected_args"
+        echo "Number of arguments expected: $NEXPECTED_ARGS"
         exit 1
 fi
 
@@ -41,9 +82,6 @@ if [ "$rsync_exit_status" -ne "0" ]; then
     exit $rsync_exit_status
 fi
 
-grep -v "\/$" $transferred_filepath                         \
-    > "$transferred_filepath"_intermediate                  \
-&& mv "$transferred_filepath"_intermediate                  \
-      "$transferred_filepath"
+clean_up_transferred_list "$transferred_filepath"
 
 echo "$0 done"
