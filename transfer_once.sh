@@ -1,3 +1,8 @@
+#!/bin/bash
+
+# Transfer Once
+# Version 0.1.0
+
 set -e
 
 NEXPECTED_ARGS=2
