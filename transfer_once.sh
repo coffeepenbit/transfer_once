@@ -1,12 +1,18 @@
 #!/bin/bash
 
 # Transfer Once
-# Version 0.1.0
 
 set -e
 
 NEXPECTED_ARGS=2
 TRANSFERRED_FILEPATH="./transferred"
+USAGE="$(basename "$0") [-h] [-v] <source> <destination>
+
+    -h  display this help and exit
+    -v  verbose
+
+Transfer files over, only once, even if destination changes"
+VERSION="0.1.0"
 
 
 function clean_up_transferred_list {
@@ -46,19 +52,38 @@ function remove_duplicates_from_list {
 }
 
 
-if [ ! $# -eq $NEXPECTED_ARGS ]
-    then
-        echo "Number of arguments provided: $#"
-        echo "Number of arguments expected: $NEXPECTED_ARGS"
-        exit 1
+verbose=false
+while getopts 'vh' OPTION; do
+    case "$OPTION" in
+        v)
+            verbose=true
+            ;;
+        h) 
+            echo "$USAGE"
+            exit 0
+            ;;
+        ? | h) 
+            echo "$USAGE"
+            exit 1
+            ;;
+    esac
+done
+shift "$(($OPTIND -1))"
+    
+
+if [ ! $# -eq $NEXPECTED_ARGS ]; then
+    echo "$USAGE"
+    exit 1
 fi
 
 source_dir="$1"
 destination_dir="$2"
 
 echo "Running transfer_once"
-echo "source_dir: \"$source_dir\""
-echo "destination_dir: \"$destination_dir\""
+if $verbose; then
+    echo "source_dir: \"$source_dir\""
+    echo "destination_dir: \"$destination_dir\""
+fi
 
 lock_filepath="$HOME/.transfer_once.lock"
 touch $TRANSFERRED_FILEPATH
