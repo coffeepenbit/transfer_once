@@ -7,6 +7,8 @@ The purpose is to allow for moving/deleting files at the destination, without wo
 To run:
 `./transfer_once.sh <source_directory> <destination_directory>`
 
+You can get more help with `./transfer_once.sh -h`
+
 ## Running tests
 To run unit tests, run:
 `bats ./tests.sh`
