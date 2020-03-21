@@ -13,7 +13,7 @@ USAGE="$(basename "$0") [-h] [-v] <source> <destination>
     -t  specify transferred file
 
 Transfer files, only once, even if the destination changes."
-VERSION="0.2.0"
+VERSION="0.1.0"
 
 
 function clean_up_transferred_list {
