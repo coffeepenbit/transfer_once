@@ -6,7 +6,7 @@ FILENAMES=(
 
 
 function teardown {
-    rm -rf nonexistant_dest nonexistant_source rsync_dest rsync_source transferred
+    rm -rf nonexistant_dest nonexistant_source rsync_dest rsync_source transferred other_transferred
 }
 
 
@@ -214,6 +214,7 @@ function teardown {
     echo -e "output:\n${output}\n"
     [ "$status" -eq 0 ]
     [ -d rsync_dest ]
+
     for i in "${FILENAMES[@]}"; do
         echo "filename: "$i""
         [ -f rsync_dest/"$i" ]
@@ -221,4 +222,27 @@ function teardown {
     done
     [ -f rsync_dest/"additional file" ]
     [ -f rsync_dest/subdirectory/"additional file" ]
+}
+
+
+@test "Specified transffered file location" {
+    mkdir rsync_source rsync_dest
+    for i in "${FILENAMES[@]}"; do
+        echo "filename: "$i""
+        touch rsync_source/"$i"
+    done
+
+    run ./transfer_once.sh -t other_transferred rsync_source rsync_dest  
+
+    echo -e "status:\n${status}\n"
+    echo -e "output:\n${output}\n"
+    [ "$status" -eq 0 ]
+    [ -d rsync_dest ]
+
+    for i in "${FILENAMES[@]}"; do
+        echo "filename: "$i""
+        [ -f rsync_dest/"$i" ]
+    done
+    [ -f other_transferred ]
+    [ ! -f transffered ]
 }
