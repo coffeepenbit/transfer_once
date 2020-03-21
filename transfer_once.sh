@@ -10,9 +10,10 @@ USAGE="$(basename "$0") [-h] [-v] <source> <destination>
 
     -h  display this help and exit
     -v  verbose
+    -t  specify transferred file
 
-Transfer files over, only once, even if destination changes"
-VERSION="0.1.0"
+Transfer files, only once, even if the destination changes."
+VERSION="0.2.0"
 
 
 function clean_up_transferred_list {
@@ -53,16 +54,19 @@ function remove_duplicates_from_list {
 
 
 verbose=false
-while getopts 'vh' OPTION; do
+while getopts 't:vh' OPTION; do
     case "$OPTION" in
-        v)
-            verbose=true
-            ;;
         h) 
             echo "$USAGE"
             exit 0
             ;;
-        ? | h) 
+        t)
+            TRANSFERRED_FILEPATH="$OPTARG"
+            ;;
+        v)
+            verbose=true
+            ;;
+        ?) 
             echo "$USAGE"
             exit 1
             ;;
@@ -83,6 +87,7 @@ echo "Running transfer_once"
 if $verbose; then
     echo "source_dir: \"$source_dir\""
     echo "destination_dir: \"$destination_dir\""
+    echo "$TRANSFERRED_FILEPATH: \"$TRANSFERRED_FILEPATH\""
 fi
 
 lock_filepath="$HOME/.transfer_once.lock"
