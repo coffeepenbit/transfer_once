@@ -1,17 +1,28 @@
 FILENAMES=(
-    "single_file"
-    "whitespace file"
-    ".hidden file"
+    "underscore_filename"
+    "whitespace filename"
+    ".hidden filename"
+    "[ bracket ] filename"
+    "* asterisk"
+    "** double asterisk filename"
+    "? question filename"
 )
 
 
 function teardown {
-    rm -rf nonexistant_dest nonexistant_source rsync_dest rsync_source transferred other_transferred
+    rm -rf nonexistant_dest nonexistant_source rsync_dest rsync_source        \
+           transferred other_transferred
+}
+
+
+function reset_dest {
+    rm -r rsync_dest
+    mkdir rsync_dest
 }
 
 
 @test "No input" {
-    run ./transfer_once.sh
+    run ./transfer_once.sh -v
 
     [ "$status" -eq 1 ]
 }
@@ -20,7 +31,7 @@ function teardown {
 @test "Non-existant source" {
     mkdir rsync_dest
 
-    run ./transfer_once.sh nonexistant_source rsync_dest
+    run ./transfer_once.sh -v nonexistant_source rsync_dest
 
     echo -e "status:\n${status}\n"
     echo -e "output:\n${output}\n"
@@ -34,7 +45,7 @@ function teardown {
     destination_dir="nonexistant_dest"    
     mkdir rsync_source
 
-    run ./transfer_once.sh "$source_dir" "$destination_dir"
+    run ./transfer_once.sh -v "$source_dir" "$destination_dir"
 
     echo -e "status:\n${status}\n"
     echo -e "output:\n${output}\n"
@@ -44,7 +55,7 @@ function teardown {
 
 
 @test "Non-existant source and destination" {
-    run ./transfer_once.sh nonexistant_source nonexistant_dest
+    run ./transfer_once.sh -v nonexistant_source nonexistant_dest
 
     echo -e "status:\n${status}\n"
     echo -e "output:\n${output}\n"0
@@ -56,7 +67,7 @@ function teardown {
 @test "Empty source and dest" {
     mkdir rsync_source rsync_dest
 
-    run ./transfer_once.sh rsync_source rsync_dest
+    run ./transfer_once.sh -v rsync_source rsync_dest
 
     echo -e "status:\n${status}\n"
     echo -e "output:\n${output}\n"
@@ -67,12 +78,12 @@ function teardown {
 
 @test "Single file transfer" {
     for i in "${FILENAMES[@]}"; do
-        echo "single file name: "$i""
+        echo "filename being tested: "$i""
         teardown
         mkdir rsync_source rsync_dest
         touch rsync_source/"$i"
 
-        run ./transfer_once.sh rsync_source rsync_dest
+        run ./transfer_once.sh -v rsync_source rsync_dest
 
         echo -e "status:\n${status}\n"
         echo -e "output:\n${output}\n"
@@ -85,15 +96,15 @@ function teardown {
 
 @test "Single file transfer once" {
     for i in "${FILENAMES[@]}"; do
-        echo "single file name: "$i""
+        echo "filename being tested: "$i""
         teardown
         mkdir rsync_source rsync_dest
         touch rsync_source/"$i"
-        [ ! -f rsync_dest/"$i" ]
         [ ! -f ./transferred ]
-        echo "$i" > transferred
 
-        run ./transfer_once.sh rsync_source rsync_dest
+        run ./transfer_once.sh -v rsync_source rsync_dest
+        reset_dest
+        run ./transfer_once.sh -v rsync_source rsync_dest
 
         echo -e "status:\n${status}\n"
         echo -e "output:\n${output}\n"
@@ -111,7 +122,7 @@ function teardown {
         touch rsync_source/"$i"
     done
 
-    run ./transfer_once.sh rsync_source rsync_dest  
+    run ./transfer_once.sh -v rsync_source rsync_dest  
 
     echo -e "status:\n${status}\n"
     echo -e "output:\n${output}\n"
@@ -130,10 +141,12 @@ function teardown {
     for i in "${FILENAMES[@]}"; do
         echo "filename: "$i""
         touch rsync_source/"$i"
-        echo "$i" >> transferred
+        # echo "$i" >> transferred
     done
 
-    run ./transfer_once.sh rsync_source rsync_dest  
+    run ./transfer_once.sh -v rsync_source rsync_dest
+    reset_dest
+    run ./transfer_once.sh -v rsync_source rsync_dest
 
     echo -e "status:\n${status}\n"
     echo -e "output:\n${output}\n"
@@ -155,7 +168,7 @@ function teardown {
         touch rsync_source/subdirectory/"$i"
     done
 
-    run ./transfer_once.sh rsync_source rsync_dest  
+    run ./transfer_once.sh -v rsync_source rsync_dest  
 
     echo -e "status:\n${status}\n"
     echo -e "output:\n${output}\n"
@@ -175,12 +188,12 @@ function teardown {
     for i in "${FILENAMES[@]}"; do
         echo "filename: "$i""
         touch rsync_source/"$i"
-        echo "$i" >> transferred
         touch rsync_source/subdirectory/"$i"
-        echo "subdirectory/$i" >> transferred
     done
 
-    run ./transfer_once.sh rsync_source rsync_dest  
+    run ./transfer_once.sh -v rsync_source rsync_dest
+    reset_dest
+    run ./transfer_once.sh -v rsync_source rsync_dest 
 
     echo -e "status:\n${status}\n"
     echo -e "output:\n${output}\n"
@@ -203,12 +216,12 @@ function teardown {
         touch rsync_source/subdirectory/"$i"
     done
 
-    run ./transfer_once.sh rsync_source rsync_dest  
+    run ./transfer_once.sh -v rsync_source rsync_dest  
 
     touch rsync_source/"additional file"
     touch rsync_source/subdirectory/"additional file"
 
-    run ./transfer_once.sh rsync_source rsync_dest  
+    run ./transfer_once.sh -v rsync_source rsync_dest  
 
     echo -e "status:\n${status}\n"
     echo -e "output:\n${output}\n"
@@ -225,14 +238,14 @@ function teardown {
 }
 
 
-@test "Specified transffered file location" {
+@test "Specified transferred file location" {
     mkdir rsync_source rsync_dest
     for i in "${FILENAMES[@]}"; do
         echo "filename: "$i""
         touch rsync_source/"$i"
     done
 
-    run ./transfer_once.sh -t other_transferred rsync_source rsync_dest  
+    run ./transfer_once.sh -v -t other_transferred rsync_source rsync_dest  
 
     echo -e "status:\n${status}\n"
     echo -e "output:\n${output}\n"
@@ -244,5 +257,5 @@ function teardown {
         [ -f rsync_dest/"$i" ]
     done
     [ -f other_transferred ]
-    [ ! -f transffered ]
+    [ ! -f transferred ]
 }
