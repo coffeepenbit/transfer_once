@@ -1,10 +1,16 @@
 #!/bin/bash
 
 # Transfer Once
+# Version: 0.2.0
 
 set -e
 
 NEXPECTED_ARGS=2
+SED_ESCAPES=(
+    '-e s/\[/\\[/g' # Escape left brackets
+    '-e s/\*/\\*/g' # Escape asterisks
+    '-e s/\?/\\?/g' # Escape question marks
+)
 TRANSFERRED_FILEPATH="./transferred"
 USAGE="$(basename "$0") [-h] [-v] <source> <destination>
 
@@ -13,11 +19,12 @@ USAGE="$(basename "$0") [-h] [-v] <source> <destination>
     -t  specify transferred file
 
 Transfer files, only once, even if the destination changes."
-VERSION="0.2.0"
 
 
 function clean_up_transferred_list {
-    echo "Cleaning up transferred file list"
+    if [ "$verbose" = true ]; then
+        echo "Cleaning up transferred file list"
+    fi
     transferred_filepath="$1"
 
     if [ -f "$transferred_filepath" ]; then
@@ -31,7 +38,9 @@ function clean_up_transferred_list {
 
 
 function remove_directories_from_list {
-    echo "Removing directories from list"
+    if [ "$verbose" = true ]; then
+        echo "Removing directories from list"
+    fi    
     filepath="$1"
 
     grep -v "\/$" "$filepath"                               \
@@ -43,7 +52,9 @@ function remove_directories_from_list {
 
 
 function remove_duplicates_from_list {
-    echo "Removing duplicates from list"
+    if [ "$verbose" = true ]; then
+        echo "Removing duplicates from list"
+    fi        
     filepath="$1"
 
     sort -u "$filepath"                                     \
@@ -76,27 +87,32 @@ shift "$(($OPTIND -1))"
     
 
 if [ ! $# -eq $NEXPECTED_ARGS ]; then
+    echo "Expect $NEXPECTED_ARGS args, received $# args"
     echo "$USAGE"
     exit 1
 fi
 
+
 source_dir="$1"
 destination_dir="$2"
 
+
 echo "Running transfer_once"
-if $verbose; then
+if [ "$verbose" = true ]; then
     echo "source_dir: \"$source_dir\""
     echo "destination_dir: \"$destination_dir\""
-    echo "$TRANSFERRED_FILEPATH: \"$TRANSFERRED_FILEPATH\""
+    echo "transferred_filepath: \"$TRANSFERRED_FILEPATH\""
+    echo "\n"
 fi
 
-lock_filepath="$HOME/.transfer_once.lock"
-touch $TRANSFERRED_FILEPATH
 
+lock_filepath="$HOME/.transfer_once.lock"
+touch "$TRANSFERRED_FILEPATH"
+
+
+echo "Running rsync"
 flock --nonblock $lock_filepath                             \
     rsync                                                   \
-        "$source_dir/"                                      \
-        "$destination_dir/"                                 \
         --prune-empty-dirs                                  \
         --itemize-changes                                   \
         --archive                                           \
@@ -104,7 +120,12 @@ flock --nonblock $lock_filepath                             \
         --human-readable                                    \
         --out-format="%n"                                   \
         --exclude-from="$TRANSFERRED_FILEPATH"              \
+        --                                                  \
+        "$source_dir/"                                      \
+        "$destination_dir/"                                 \
+        | sed "${SED_ESCAPES[@]}"                           \
         | tee -a "$TRANSFERRED_FILEPATH"
+
 
 rsync_exit_status=${PIPESTATUS[0]}
 if [ "$rsync_exit_status" -ne "0" ]; then
@@ -112,6 +133,10 @@ if [ "$rsync_exit_status" -ne "0" ]; then
     exit $rsync_exit_status
 fi
 
+
 clean_up_transferred_list "$TRANSFERRED_FILEPATH"
 
-echo "$0 done"
+
+if [ "$verbose" = true ]; then
+    echo "$0 done"
+fi
